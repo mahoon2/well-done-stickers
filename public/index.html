@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Praise Sticker Chart</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
     <style>
         * {
             margin: 0;
@@ -36,6 +37,56 @@
         .header p {
             color: #666;
             font-size: 1.2em;
+        }
+
+        /* Authentication Section */
+        .auth-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-button, .user-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-button {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        .auth-button:hover {
+            background-color: #357ae8;
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            background-color: white;
+            color: #333;
+            border: 2px solid #ddd;
+            cursor: default;
+        }
+
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .logout-btn:hover {
+            background-color: #da190b;
         }
 
         .boards-container {
@@ -71,53 +122,97 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
+            gap: 12px;
         }
 
+        /* Grape Design - Circular slots */
         .slot {
             aspect-ratio: 1;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            border-radius: 50%; /* Makes slots circular like grapes */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background-color: #fafafa;
             padding: 8px;
             text-align: center;
+            position: relative;
         }
 
         .slot.empty {
-            font-size: 1.2em;
+            border: 2px solid #cccccc;
+            background-color: #fafafa;
+            font-size: 1.1em;
             font-weight: bold;
             color: #999;
         }
 
-        .slot.empty:hover {
-            background-color: #e8f5e8;
+        .slot.empty.next-available {
             border-color: #4CAF50;
-            transform: translateY(-2px);
+            background-color: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .slot.empty.next-available:hover {
+            background-color: #d4e4d4;
+            transform: scale(1.05);
+        }
+
+        .slot.empty.not-available {
+            border-color: #cccccc;
+            background-color: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
         }
 
         .slot.filled {
-            background-color: #fff3c4;
-            border-color: #ffc107;
-            color: #333;
+            background-color: #6f42c1; /* Purple grape color */
+            border: 2px solid #5a2d91;
+            color: white;
+        }
+
+        .slot.filled.exercise {
+            background-color: #28a745; /* Green grape for exercise */
+            border-color: #1e7e34;
         }
 
         .slot.filled .date {
             font-weight: bold;
-            font-size: 0.9em;
-            margin-bottom: 4px;
-            color: #ff6b35;
+            font-size: 0.8em;
+            margin-bottom: 2px;
         }
 
         .slot.filled .reason {
-            font-size: 0.8em;
-            line-height: 1.2;
+            font-size: 0.7em;
+            line-height: 1.1;
             word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 2.2em;
+        }
+
+        /* Reward Section */
+        .reward-section {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .reward-section h2 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .reward-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .modal {
@@ -224,13 +319,17 @@
                 grid-template-columns: 1fr;
                 gap: 30px;
             }
-
+            
             .grid {
                 grid-template-columns: repeat(5, 1fr);
             }
-
+            
             .header h1 {
                 font-size: 2em;
+            }
+
+            .slot .reason {
+                font-size: 0.6em;
             }
         }
     </style>
@@ -238,8 +337,19 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌟 Praise Sticker Chart 🌟</h1>
+            <h1>🍇 Praise Grape Chart 🍇</h1>
             <p>Supporting your amazing diet journey!</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section" id="auth-section">
+            <button id="login-btn" class="auth-button" style="display: none;">
+                🔐 Login with Google
+            </button>
+            <div id="user-info" class="user-info" style="display: none;">
+                <span id="user-name"></span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
         </div>
 
         <div class="loading" id="loading">Loading your progress...</div>
@@ -255,27 +365,33 @@
                 <div class="grid" id="diet-grid"></div>
             </div>
         </div>
+
+        <!-- Reward Section -->
+        <div class="reward-section" id="reward-section" style="display: none;">
+            <h2>🎉 Your Reward for Completing the Chart! 🏆</h2>
+            <img src="/gift.png" alt="Reward Gift" class="reward-image">
+        </div>
     </div>
 
     <!-- Modal for adding new stickers -->
     <div id="sticker-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add New Sticker ✨</h2>
+                <h2>Add New Grape ✨</h2>
                 <p id="modal-subtitle"></p>
             </div>
-
+            
             <form id="sticker-form">
                 <div class="form-group">
                     <label for="date-input">Date:</label>
                     <input type="text" id="date-input" placeholder="e.g., 9/7" required>
                 </div>
-
+                
                 <div class="form-group">
                     <label for="reason-input">Reason:</label>
                     <input type="text" id="reason-input" placeholder="e.g., 30-min run" required>
                 </div>
-
+                
                 <div class="button-group">
                     <button type="submit" class="btn btn-save">Save</button>
                     <button type="button" class="btn btn-cancel" id="cancel-btn">Cancel</button>
@@ -288,6 +404,7 @@
         // Firebase imports and configuration
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAFsPOL7pe5j2gHba9WsTse7vo4dvF6MAc",
@@ -301,14 +418,18 @@
 
         // Global variables
         let db;
+        let auth;
+        let currentUser = null;
         let currentBoardType = '';
         let currentSlotIndex = 0;
+        let highestFilledSlots = { exercise: 0, diet: 0 }; // Track highest filled slot for each board
 
         // Initialize Firebase and the app
         async function initializeFirebase() {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                auth = getAuth(app);
                 console.log('Firebase initialized successfully');
             } catch (error) {
                 console.error('Firebase initialization error:', error);
@@ -316,16 +437,78 @@
             }
         }
 
-        // Create empty slot HTML
+        // Authentication functions
+        async function signInWithGoogle() {
+            try {
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+                currentUser = result.user;
+                updateAuthUI();
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert('Authentication failed. Please try again.');
+            }
+        }
+
+        async function signOutUser() {
+            try {
+                await signOut(auth);
+                currentUser = null;
+                updateAuthUI();
+                updateSlotInteractivity(); // Update slot availability after logout
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const userInfo = document.getElementById('user-info');
+            const userName = document.getElementById('user-name');
+
+            if (currentUser) {
+                loginBtn.style.display = 'none';
+                userInfo.style.display = 'inline-flex';
+                userName.textContent = currentUser.displayName || currentUser.email;
+            } else {
+                loginBtn.style.display = 'inline-flex';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // Check if user has write permissions (whitelist check)
+        function canUserWrite() {
+            if (!currentUser) return false;
+            
+            // Whitelist of authorized emails - UPDATE THESE WITH YOUR ACTUAL EMAILS
+            const authorizedEmails = [
+                'your-email@gmail.com',
+                'your.girlfriends.email@example.com'
+            ];
+            
+            return authorizedEmails.includes(currentUser.email);
+        }
+
+        // Create empty slot HTML with sequential filling logic
         function createEmptySlot(boardType, slotIndex) {
-            return `<div class="slot empty" data-board="${boardType}" data-slot="${slotIndex}">
+            const isNextAvailable = slotIndex === (highestFilledSlots[boardType] + 1);
+            const canWrite = canUserWrite();
+            
+            let slotClass = 'slot empty';
+            if (canWrite && isNextAvailable) {
+                slotClass += ' next-available';
+            } else {
+                slotClass += ' not-available';
+            }
+            
+            return `<div class="${slotClass}" data-board="${boardType}" data-slot="${slotIndex}">
                 ${slotIndex}
             </div>`;
         }
 
-        // Create filled slot HTML
+        // Create filled slot HTML with grape styling
         function createFilledSlot(boardType, slotIndex, date, reason) {
-            return `<div class="slot filled" data-board="${boardType}" data-slot="${slotIndex}">
+            return `<div class="slot filled ${boardType}" data-board="${boardType}" data-slot="${slotIndex}">
                 <div class="date">${date}</div>
                 <div class="reason">${reason}</div>
             </div>`;
@@ -336,11 +519,55 @@
             const exerciseGrid = document.getElementById('exercise-grid');
             const dietGrid = document.getElementById('diet-grid');
 
+            // Clear existing content
+            exerciseGrid.innerHTML = '';
+            dietGrid.innerHTML = '';
+
             // Create 30 empty slots for each board
             for (let i = 1; i <= 30; i++) {
                 exerciseGrid.innerHTML += createEmptySlot('exercise', i);
                 dietGrid.innerHTML += createEmptySlot('diet', i);
             }
+        }
+
+        // Update slot interactivity based on sequential filling and authentication
+        function updateSlotInteractivity() {
+            ['exercise', 'diet'].forEach(boardType => {
+                const grid = document.getElementById(`${boardType}-grid`);
+                const slots = grid.querySelectorAll('.slot.empty');
+                
+                slots.forEach(slot => {
+                    const slotIndex = parseInt(slot.dataset.slot);
+                    const isNextAvailable = slotIndex === (highestFilledSlots[boardType] + 1);
+                    const canWrite = canUserWrite();
+                    
+                    // Reset classes
+                    slot.className = 'slot empty';
+                    
+                    if (canWrite && isNextAvailable) {
+                        slot.classList.add('next-available');
+                    } else {
+                        slot.classList.add('not-available');
+                    }
+                });
+            });
+        }
+
+        // Calculate highest filled slots for each board
+        function calculateHighestFilledSlots() {
+            highestFilledSlots = { exercise: 0, diet: 0 };
+            
+            ['exercise', 'diet'].forEach(boardType => {
+                const grid = document.getElementById(`${boardType}-grid`);
+                const filledSlots = grid.querySelectorAll('.slot.filled');
+                
+                filledSlots.forEach(slot => {
+                    const slotIndex = parseInt(slot.dataset.slot);
+                    if (slotIndex > highestFilledSlots[boardType]) {
+                        highestFilledSlots[boardType] = slotIndex;
+                    }
+                });
+            });
         }
 
         // Fetch stickers from Firestore and render them
@@ -353,14 +580,21 @@
             try {
                 const stickersCollection = collection(db, 'stickers');
                 const querySnapshot = await getDocs(stickersCollection);
-
+                
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     renderSticker(data.boardType, data.slotIndex, data.date, data.reason);
                 });
 
+                // Calculate highest filled slots after loading all stickers
+                calculateHighestFilledSlots();
+                
+                // Update slot interactivity
+                updateSlotInteractivity();
+
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('boards').style.display = 'grid';
+                document.getElementById('reward-section').style.display = 'block';
             } catch (error) {
                 console.error('Error fetching stickers:', error);
                 document.getElementById('loading').textContent = 'Error loading data. Please refresh the page.';
@@ -371,26 +605,42 @@
         function renderSticker(boardType, slotIndex, date, reason) {
             const grid = document.getElementById(`${boardType}-grid`);
             const slot = grid.querySelector(`[data-board="${boardType}"][data-slot="${slotIndex}"]`);
-
+            
             if (slot) {
                 slot.outerHTML = createFilledSlot(boardType, slotIndex, date, reason);
             }
         }
 
-        // Handle slot click events
+        // Handle slot click events with sequential filling
         function handleSlotClick(event) {
             const slot = event.target.closest('.slot');
             if (!slot || slot.classList.contains('filled')) {
                 return; // Ignore clicks on filled slots
             }
 
+            // Check if user can write
+            if (!canUserWrite()) {
+                if (!currentUser) {
+                    alert('Please login to add stickers.');
+                } else {
+                    alert('You do not have permission to add stickers.');
+                }
+                return;
+            }
+
+            // Check if this slot is the next available for sequential filling
+            if (!slot.classList.contains('next-available')) {
+                alert('Please fill slots in sequential order!');
+                return;
+            }
+
             currentBoardType = slot.dataset.board;
             currentSlotIndex = parseInt(slot.dataset.slot);
-
+            
             // Update modal subtitle
             const boardName = currentBoardType === 'exercise' ? 'Exercise' : 'Diet';
-            document.getElementById('modal-subtitle').textContent = `${boardName} - Slot ${currentSlotIndex}`;
-
+            document.getElementById('modal-subtitle').textContent = `${boardName} - Grape ${currentSlotIndex}`;
+            
             // Clear form and show modal
             document.getElementById('sticker-form').reset();
             document.getElementById('sticker-modal').style.display = 'block';
@@ -413,7 +663,7 @@
                     reason: reason,
                     createdAt: serverTimestamp()
                 });
-
+                
                 console.log('Sticker saved successfully');
                 return true;
             } catch (error) {
@@ -426,10 +676,10 @@
         // Handle form submission
         async function handleFormSubmit(event) {
             event.preventDefault();
-
+            
             const date = document.getElementById('date-input').value.trim();
             const reason = document.getElementById('reason-input').value.trim();
-
+            
             if (!date || !reason) {
                 alert('Please fill in both date and reason.');
                 return;
@@ -437,15 +687,23 @@
 
             // Save to Firestore
             const success = await saveSticker(currentBoardType, currentSlotIndex, date, reason);
-
+            
             if (success) {
                 // Update UI immediately
                 renderSticker(currentBoardType, currentSlotIndex, date, reason);
-
+                
+                // Update highest filled slot
+                if (currentSlotIndex > highestFilledSlots[currentBoardType]) {
+                    highestFilledSlots[currentBoardType] = currentSlotIndex;
+                }
+                
+                // Update slot interactivity for sequential filling
+                updateSlotInteractivity();
+                
                 // Close modal
                 closeModal();
-
-                // Re-attach event listeners to the new slot
+                
+                // Re-attach event listeners
                 attachEventListeners();
             }
         }
@@ -459,7 +717,7 @@
         function attachEventListeners() {
             // Remove existing listeners
             document.removeEventListener('click', handleSlotClick);
-
+            
             // Attach click listeners to all slots
             document.addEventListener('click', (event) => {
                 if (event.target.closest('.slot')) {
@@ -468,35 +726,60 @@
             });
 
             // Modal form submission
-            document.getElementById('sticker-form').addEventListener('submit', handleFormSubmit);
-
+            const form = document.getElementById('sticker-form');
+            form.removeEventListener('submit', handleFormSubmit);
+            form.addEventListener('submit', handleFormSubmit);
+            
             // Cancel button
-            document.getElementById('cancel-btn').addEventListener('click', closeModal);
-
+            const cancelBtn = document.getElementById('cancel-btn');
+            cancelBtn.removeEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
             // Close modal when clicking outside
-            document.getElementById('sticker-modal').addEventListener('click', (event) => {
-                if (event.target === document.getElementById('sticker-modal')) {
-                    closeModal();
-                }
-            });
+            const modal = document.getElementById('sticker-modal');
+            modal.removeEventListener('click', handleModalClick);
+            modal.addEventListener('click', handleModalClick);
+
+            // Authentication buttons
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            loginBtn.removeEventListener('click', signInWithGoogle);
+            loginBtn.addEventListener('click', signInWithGoogle);
+            
+            logoutBtn.removeEventListener('click', signOutUser);
+            logoutBtn.addEventListener('click', signOutUser);
+        }
+
+        function handleModalClick(event) {
+            if (event.target === document.getElementById('sticker-modal')) {
+                closeModal();
+            }
         }
 
         // Initialize the application
         async function initializeStickerApp() {
-            console.log('Initializing Praise Sticker Chart...');
-
+            console.log('Initializing Praise Grape Chart...');
+            
             // Initialize Firebase
             await initializeFirebase();
-
+            
+            // Set up auth state listener
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                updateAuthUI();
+                updateSlotInteractivity(); // Update slot availability when auth changes
+            });
+            
             // Initialize empty grids
             initializeGrids();
-
+            
             // Attach event listeners
             attachEventListeners();
-
+            
             // Fetch and render existing stickers
             await fetchAndRenderStickers();
-
+            
             console.log('App initialized successfully!');
         }
 

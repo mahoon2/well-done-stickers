@@ -2,9 +2,15 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to stickers collection
-    match /stickers/{document} {
-      allow read, write: if true;
+    match /stickers/{stickerId} {
+      // Anyone can view the stickers
+      allow read: if true;
+
+      // Only whitelisted users can create, update, or delete
+      allow write: if request.auth != null && request.auth.token.email in [
+        'your-email@gmail.com', 
+        'your.girlfriends.email@example.com'
+      ];
     }
   }
 }
