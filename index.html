@@ -224,11 +224,11 @@
                 grid-template-columns: 1fr;
                 gap: 30px;
             }
-            
+
             .grid {
                 grid-template-columns: repeat(5, 1fr);
             }
-            
+
             .header h1 {
                 font-size: 2em;
             }
@@ -264,18 +264,18 @@
                 <h2>Add New Sticker ✨</h2>
                 <p id="modal-subtitle"></p>
             </div>
-            
+
             <form id="sticker-form">
                 <div class="form-group">
                     <label for="date-input">Date:</label>
                     <input type="text" id="date-input" placeholder="e.g., 9/7" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="reason-input">Reason:</label>
                     <input type="text" id="reason-input" placeholder="e.g., 30-min run" required>
                 </div>
-                
+
                 <div class="button-group">
                     <button type="submit" class="btn btn-save">Save</button>
                     <button type="button" class="btn btn-cancel" id="cancel-btn">Cancel</button>
@@ -291,12 +291,13 @@
 
         // TODO: Replace with your Firebase config
         const firebaseConfig = {
-            // apiKey: "your-api-key",
-            // authDomain: "your-project.firebaseapp.com",
-            // projectId: "your-project-id",
-            // storageBucket: "your-project.appspot.com",
-            // messagingSenderId: "123456789",
-            // appId: "your-app-id"
+            apiKey: "AIzaSyAFsPOL7pe5j2gHba9WsTse7vo4dvF6MAc",
+            authDomain: "well-done-stickers.firebaseapp.com",
+            projectId: "well-done-stickers",
+            storageBucket: "well-done-stickers.firebasestorage.app",
+            messagingSenderId: "288319622062",
+            appId: "1:288319622062:web:b391d6897ba14537a1d63f",
+            measurementId: "G-8XN84NZW3G"
         };
 
         // Global variables
@@ -353,7 +354,7 @@
             try {
                 const stickersCollection = collection(db, 'stickers');
                 const querySnapshot = await getDocs(stickersCollection);
-                
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     renderSticker(data.boardType, data.slotIndex, data.date, data.reason);
@@ -371,7 +372,7 @@
         function renderSticker(boardType, slotIndex, date, reason) {
             const grid = document.getElementById(`${boardType}-grid`);
             const slot = grid.querySelector(`[data-board="${boardType}"][data-slot="${slotIndex}"]`);
-            
+
             if (slot) {
                 slot.outerHTML = createFilledSlot(boardType, slotIndex, date, reason);
             }
@@ -386,11 +387,11 @@
 
             currentBoardType = slot.dataset.board;
             currentSlotIndex = parseInt(slot.dataset.slot);
-            
+
             // Update modal subtitle
             const boardName = currentBoardType === 'exercise' ? 'Exercise' : 'Diet';
             document.getElementById('modal-subtitle').textContent = `${boardName} - Slot ${currentSlotIndex}`;
-            
+
             // Clear form and show modal
             document.getElementById('sticker-form').reset();
             document.getElementById('sticker-modal').style.display = 'block';
@@ -413,7 +414,7 @@
                     reason: reason,
                     createdAt: serverTimestamp()
                 });
-                
+
                 console.log('Sticker saved successfully');
                 return true;
             } catch (error) {
@@ -426,10 +427,10 @@
         // Handle form submission
         async function handleFormSubmit(event) {
             event.preventDefault();
-            
+
             const date = document.getElementById('date-input').value.trim();
             const reason = document.getElementById('reason-input').value.trim();
-            
+
             if (!date || !reason) {
                 alert('Please fill in both date and reason.');
                 return;
@@ -437,14 +438,14 @@
 
             // Save to Firestore
             const success = await saveSticker(currentBoardType, currentSlotIndex, date, reason);
-            
+
             if (success) {
                 // Update UI immediately
                 renderSticker(currentBoardType, currentSlotIndex, date, reason);
-                
+
                 // Close modal
                 closeModal();
-                
+
                 // Re-attach event listeners to the new slot
                 attachEventListeners();
             }
@@ -459,7 +460,7 @@
         function attachEventListeners() {
             // Remove existing listeners
             document.removeEventListener('click', handleSlotClick);
-            
+
             // Attach click listeners to all slots
             document.addEventListener('click', (event) => {
                 if (event.target.closest('.slot')) {
@@ -469,10 +470,10 @@
 
             // Modal form submission
             document.getElementById('sticker-form').addEventListener('submit', handleFormSubmit);
-            
+
             // Cancel button
             document.getElementById('cancel-btn').addEventListener('click', closeModal);
-            
+
             // Close modal when clicking outside
             document.getElementById('sticker-modal').addEventListener('click', (event) => {
                 if (event.target === document.getElementById('sticker-modal')) {
@@ -484,19 +485,19 @@
         // Initialize the application
         async function initializeApp() {
             console.log('Initializing Praise Sticker Chart...');
-            
+
             // Initialize Firebase
             await initializeFirebase();
-            
+
             // Initialize empty grids
             initializeGrids();
-            
+
             // Attach event listeners
             attachEventListeners();
-            
+
             // Fetch and render existing stickers
             await fetchAndRenderStickers();
-            
+
             console.log('App initialized successfully!');
         }
 
