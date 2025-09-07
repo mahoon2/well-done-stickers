@@ -6,10 +6,5 @@ service cloud.firestore {
     match /stickers/{document} {
       allow read, write: if true;
     }
-    
-    // Deny access to all other collections
-    match /{document=**} {
-      allow read, write: if false;
-    }
   }
 }
