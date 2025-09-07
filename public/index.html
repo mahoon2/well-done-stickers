@@ -319,11 +319,11 @@
                 grid-template-columns: 1fr;
                 gap: 30px;
             }
-            
+
             .grid {
                 grid-template-columns: repeat(5, 1fr);
             }
-            
+
             .header h1 {
                 font-size: 2em;
             }
@@ -380,18 +380,18 @@
                 <h2>Add New Grape ✨</h2>
                 <p id="modal-subtitle"></p>
             </div>
-            
+
             <form id="sticker-form">
                 <div class="form-group">
                     <label for="date-input">Date:</label>
                     <input type="text" id="date-input" placeholder="e.g., 9/7" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="reason-input">Reason:</label>
                     <input type="text" id="reason-input" placeholder="e.g., 30-min run" required>
                 </div>
-                
+
                 <div class="button-group">
                     <button type="submit" class="btn btn-save">Save</button>
                     <button type="button" class="btn btn-cancel" id="cancel-btn">Cancel</button>
@@ -479,13 +479,12 @@
         // Check if user has write permissions (whitelist check)
         function canUserWrite() {
             if (!currentUser) return false;
-            
+
             // Whitelist of authorized emails - UPDATE THESE WITH YOUR ACTUAL EMAILS
             const authorizedEmails = [
-                'your-email@gmail.com',
-                'your.girlfriends.email@example.com'
+                'mahoon268@gmail.com',
             ];
-            
+
             return authorizedEmails.includes(currentUser.email);
         }
 
@@ -493,14 +492,14 @@
         function createEmptySlot(boardType, slotIndex) {
             const isNextAvailable = slotIndex === (highestFilledSlots[boardType] + 1);
             const canWrite = canUserWrite();
-            
+
             let slotClass = 'slot empty';
             if (canWrite && isNextAvailable) {
                 slotClass += ' next-available';
             } else {
                 slotClass += ' not-available';
             }
-            
+
             return `<div class="${slotClass}" data-board="${boardType}" data-slot="${slotIndex}">
                 ${slotIndex}
             </div>`;
@@ -535,15 +534,15 @@
             ['exercise', 'diet'].forEach(boardType => {
                 const grid = document.getElementById(`${boardType}-grid`);
                 const slots = grid.querySelectorAll('.slot.empty');
-                
+
                 slots.forEach(slot => {
                     const slotIndex = parseInt(slot.dataset.slot);
                     const isNextAvailable = slotIndex === (highestFilledSlots[boardType] + 1);
                     const canWrite = canUserWrite();
-                    
+
                     // Reset classes
                     slot.className = 'slot empty';
-                    
+
                     if (canWrite && isNextAvailable) {
                         slot.classList.add('next-available');
                     } else {
@@ -556,11 +555,11 @@
         // Calculate highest filled slots for each board
         function calculateHighestFilledSlots() {
             highestFilledSlots = { exercise: 0, diet: 0 };
-            
+
             ['exercise', 'diet'].forEach(boardType => {
                 const grid = document.getElementById(`${boardType}-grid`);
                 const filledSlots = grid.querySelectorAll('.slot.filled');
-                
+
                 filledSlots.forEach(slot => {
                     const slotIndex = parseInt(slot.dataset.slot);
                     if (slotIndex > highestFilledSlots[boardType]) {
@@ -580,7 +579,7 @@
             try {
                 const stickersCollection = collection(db, 'stickers');
                 const querySnapshot = await getDocs(stickersCollection);
-                
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     renderSticker(data.boardType, data.slotIndex, data.date, data.reason);
@@ -588,7 +587,7 @@
 
                 // Calculate highest filled slots after loading all stickers
                 calculateHighestFilledSlots();
-                
+
                 // Update slot interactivity
                 updateSlotInteractivity();
 
@@ -605,7 +604,7 @@
         function renderSticker(boardType, slotIndex, date, reason) {
             const grid = document.getElementById(`${boardType}-grid`);
             const slot = grid.querySelector(`[data-board="${boardType}"][data-slot="${slotIndex}"]`);
-            
+
             if (slot) {
                 slot.outerHTML = createFilledSlot(boardType, slotIndex, date, reason);
             }
@@ -636,11 +635,11 @@
 
             currentBoardType = slot.dataset.board;
             currentSlotIndex = parseInt(slot.dataset.slot);
-            
+
             // Update modal subtitle
             const boardName = currentBoardType === 'exercise' ? 'Exercise' : 'Diet';
             document.getElementById('modal-subtitle').textContent = `${boardName} - Grape ${currentSlotIndex}`;
-            
+
             // Clear form and show modal
             document.getElementById('sticker-form').reset();
             document.getElementById('sticker-modal').style.display = 'block';
@@ -663,7 +662,7 @@
                     reason: reason,
                     createdAt: serverTimestamp()
                 });
-                
+
                 console.log('Sticker saved successfully');
                 return true;
             } catch (error) {
@@ -676,10 +675,10 @@
         // Handle form submission
         async function handleFormSubmit(event) {
             event.preventDefault();
-            
+
             const date = document.getElementById('date-input').value.trim();
             const reason = document.getElementById('reason-input').value.trim();
-            
+
             if (!date || !reason) {
                 alert('Please fill in both date and reason.');
                 return;
@@ -687,22 +686,22 @@
 
             // Save to Firestore
             const success = await saveSticker(currentBoardType, currentSlotIndex, date, reason);
-            
+
             if (success) {
                 // Update UI immediately
                 renderSticker(currentBoardType, currentSlotIndex, date, reason);
-                
+
                 // Update highest filled slot
                 if (currentSlotIndex > highestFilledSlots[currentBoardType]) {
                     highestFilledSlots[currentBoardType] = currentSlotIndex;
                 }
-                
+
                 // Update slot interactivity for sequential filling
                 updateSlotInteractivity();
-                
+
                 // Close modal
                 closeModal();
-                
+
                 // Re-attach event listeners
                 attachEventListeners();
             }
@@ -717,7 +716,7 @@
         function attachEventListeners() {
             // Remove existing listeners
             document.removeEventListener('click', handleSlotClick);
-            
+
             // Attach click listeners to all slots
             document.addEventListener('click', (event) => {
                 if (event.target.closest('.slot')) {
@@ -729,12 +728,12 @@
             const form = document.getElementById('sticker-form');
             form.removeEventListener('submit', handleFormSubmit);
             form.addEventListener('submit', handleFormSubmit);
-            
+
             // Cancel button
             const cancelBtn = document.getElementById('cancel-btn');
             cancelBtn.removeEventListener('click', closeModal);
             cancelBtn.addEventListener('click', closeModal);
-            
+
             // Close modal when clicking outside
             const modal = document.getElementById('sticker-modal');
             modal.removeEventListener('click', handleModalClick);
@@ -743,10 +742,10 @@
             // Authentication buttons
             const loginBtn = document.getElementById('login-btn');
             const logoutBtn = document.getElementById('logout-btn');
-            
+
             loginBtn.removeEventListener('click', signInWithGoogle);
             loginBtn.addEventListener('click', signInWithGoogle);
-            
+
             logoutBtn.removeEventListener('click', signOutUser);
             logoutBtn.addEventListener('click', signOutUser);
         }
@@ -760,26 +759,26 @@
         // Initialize the application
         async function initializeStickerApp() {
             console.log('Initializing Praise Grape Chart...');
-            
+
             // Initialize Firebase
             await initializeFirebase();
-            
+
             // Set up auth state listener
             onAuthStateChanged(auth, (user) => {
                 currentUser = user;
                 updateAuthUI();
                 updateSlotInteractivity(); // Update slot availability when auth changes
             });
-            
+
             // Initialize empty grids
             initializeGrids();
-            
+
             // Attach event listeners
             attachEventListeners();
-            
+
             // Fetch and render existing stickers
             await fetchAndRenderStickers();
-            
+
             console.log('App initialized successfully!');
         }
 

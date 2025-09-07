@@ -8,8 +8,7 @@ service cloud.firestore {
 
       // Only whitelisted users can create, update, or delete
       allow write: if request.auth != null && request.auth.token.email in [
-        'your-email@gmail.com', 
-        'your.girlfriends.email@example.com'
+        'mahoon2698@gmail.com',
       ];
     }
   }
